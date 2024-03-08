@@ -1,0 +1,98 @@
+Program.Sub.ScreenSU.Start
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Function.Intrinsic.Debug.SetScriptVersion("0.0.134","True")
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+V.Local.sQuery.Declare(String)
+V.Local.sSeq.Declare(String)
+V.Local.srouter.Declare(String)
+V.Local.sjob.Declare(String)
+
+V.Local.sSuffix.Declare(String)
+V.Local.supdate.Declare(String)
+V.Local.bNext.Declare(Boolean)
+F.ODBC.Connection!conx.OpenConnection(V.Ambient.PDSN,V.Ambient.puser,V.Ambient.PPass,2000)
+
+F.ODBC.Connection!conx.OpenRecordsetRO("rst","SELECT JOB, SUFFIX,SEQ, PART, LMO  FROM JOB_OPERATIONS WHERE LMO = 'L' Order by JOB, SUFFIX, SEQ")
+V.Local.bNext.Set(False)
+F.Intrinsic.Control.DoUntil(V.ODBC.conx!rst.EOF,=,True)
+	F.Intrinsic.Control.If(V.Local.bNext,=,True)
+		F.Intrinsic.Control.If(V.odbc.conx!rst.Fieldval!JOB,=,V.Local.sJOB)
+			F.Intrinsic.Control.If(V.odbc.conx!rst.Fieldval!SUFFIX,=,V.Local.ssuffix)
+				F.Intrinsic.Control.If(V.ODBC.conx!rst.FieldValTrim!PART,<>,"SET")
+
+					F.Intrinsic.Control.If(V.odbc.conx!rst.Fieldval!LMO,=,"L")
+						F.Intrinsic.debug.stop
+						F.Intrinsic.String.Replace(V.local.sJOB,"'","''",V.Local.sJOB)
+						F.Intrinsic.String.Concat("UPDATE JOB_OPERATIONS SET  PART = '",V.odbc.conx!rst.FieldVal!PART,"' WHERE LMO = 'L' AND  JOB = '",V.Local.sJOB,"' AND SUFFIX = '",V.local.ssuffix,"' AND SEQ = '",V.local.sSeq,"'",V.Local.supdate)
+						F.ODBC.Connection!conx.Execute(V.Local.supdate)
+					F.Intrinsic.Control.endif
+				F.Intrinsic.Control.endif
+			F.Intrinsic.Control.endif
+
+		F.Intrinsic.Control.endif
+		
+		V.Local.bNext.Set(False)
+	F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.If(V.ODBC.conx!rst.FieldValTrim!PART,=,"SET")
+		V.local.sJOB.set(V.ODBC.conx!rst.FieldVal!JOB)
+		V.Local.sSuffix.Set(V.ODBC.conx!rst.FieldVal!SUFFIX)
+		V.Local.sSeq.Set(V.ODBC.conx!rst.FieldVal!SEQ)
+		V.Local.bNext.Set(True)
+		F.Intrinsic.debug.stop
+	F.Intrinsic.Control.EndIf
+
+	
+	F.ODBC.conx!rst.MoveNext
+F.Intrinsic.Control.Loop
+
+F.ODBC.conx!rst.Close
+F.Intrinsic.debug.stop
+F.ODBC.Connection!conx.OpenRecordsetRO("rst","SELECT ROUTER, ROUTER_SUFFIX,LINE_ROUTER, PART_WC_OUTSIDE, LMO  FROM ROUTER_LINE WHERE  ROUTER_TYPE = 'L' AND LMO = 'L' Order by ROUTER, ROUTER_SUFFIX, LINE_ROUTER")
+V.Local.bNext.Set(False)
+F.Intrinsic.Control.DoUntil(V.ODBC.conx!rst.EOF,=,True)
+	F.Intrinsic.Control.If(V.Local.bNext,=,True)
+		F.Intrinsic.Control.If(V.odbc.conx!rst.Fieldval!ROUTER,=,V.Local.srouter)
+			F.Intrinsic.Control.If(V.odbc.conx!rst.Fieldval!ROUTER_SUFFIX,=,V.Local.ssuffix)
+				F.Intrinsic.Control.If(V.ODBC.conx!rst.FieldValTrim!PART_WC_OUTSIDE,<>,"SET")
+
+					F.Intrinsic.Control.If(V.odbc.conx!rst.Fieldval!LMO,=,"L")
+						F.Intrinsic.debug.stop
+						F.Intrinsic.String.Replace(V.local.srouter,"'","''",V.Local.srouter)
+						F.Intrinsic.String.Concat("UPDATE ROUTER_LINE SET  PART_WC_OUTSIDE = '",V.odbc.conx!rst.FieldVal!PART_WC_OUTSIDE,"' WHERE LMO = 'L' AND  ROUTER = '",V.Local.srouter,"' AND ROUTER_SUFFIX = '",V.local.ssuffix,"' AND LINE_ROUTER = '",V.local.sSeq,"'",V.Local.supdate)
+						F.ODBC.Connection!conx.Execute(V.Local.supdate)
+					F.Intrinsic.Control.endif
+				F.Intrinsic.Control.endif
+			F.Intrinsic.Control.endif
+
+		F.Intrinsic.Control.endif
+		
+		V.Local.bNext.Set(False)
+	F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.If(V.ODBC.conx!rst.FieldValTrim!PART_WC_OUTSIDE,=,"SET")
+		V.local.srouter.set(V.ODBC.conx!rst.FieldVal!ROUTER)
+		V.Local.sSuffix.Set(V.ODBC.conx!rst.FieldVal!ROUTER_SUFFIX)
+		V.Local.sSeq.Set(V.ODBC.conx!rst.FieldVal!LINE_ROUTER)
+		V.Local.bNext.Set(True)
+		F.Intrinsic.debug.stop
+	F.Intrinsic.Control.EndIf
+
+	
+	F.ODBC.conx!rst.MoveNext
+F.Intrinsic.Control.Loop
+
+F.ODBC.conx!rst.Close
+
+Program.Sub.Main.End
+
+Program.Sub.Comments.Start
+${$0$}$ATG_WCSETUP_TOJOBROUTER.$}$JND$}$11/4/2012
+${$3$}$0$}$$}$-1$}$-1$}$$}$1/1/1900$}$Quote 4114
+Run onece to copy router workcenter setup sequence to the router and open work orders.
+
+Program.Sub.Comments.End
+
